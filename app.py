@@ -96,13 +96,13 @@ def scan_stockbee_criteria(df, min_gain, vol_mult, scan_window):
     if df is None or len(df) < 55:
         return []
     
-    # Structural Cleaning for Multi-Level Columns (yfinance standard)
+    # Structural Cleaning for Multi-Level Columns
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
         
     df = df.copy()
     
-    # Calculate Indicators without external pandas-ta library
+    # Calculate Indicators
     df['Vol_SMA'] = df['Volume'].rolling(window=50).mean()
     df['Pct_Change'] = df['Close'].pct_change() * 100
     df['EMA_10'] = df['Close'].ewm(span=10, adjust=False).mean()
@@ -144,9 +144,9 @@ def scan_stockbee_criteria(df, min_gain, vol_mult, scan_window):
             
             results.append({
                 "Date of EP": df.index[idx].strftime('%Y-%m-%d'),
-                "Current Close": round(float(df.iloc[-1]['Close']), 2),
-                "Breakout Gain %": round(pct_chg, 2),
-                "Volume Multiple": round(volume / vol_sma, 2),
+                "Current Close": f"₹{round(float(df.iloc[-1]['Close']), 2)}",
+                "Breakout Gain %": f"{round(pct_chg, 2)}%",
+                "Volume Multiple": f"{round(volume / vol_sma, 2)}x",
                 "Setup Status": status,
                 "Actionable Order Route": "OPG Route / 1-Min Range Breakout"
             })
@@ -183,10 +183,8 @@ if st.button("🔍 RUN INTENSITY MARKET SCANNER"):
         
         st.success(f"Tracked {len(final_reporting_df)} stocks fulfilling strict institutional rules.")
         
-        st.dataframe(
-            final_reporting_df.style.background_gradient(cmap='YlOrRd', subset=['Volume Multiple'])
-            .format({"Breakout Gain %": "{:.2f}%", "Volume Multiple": "{:.2f}x", "Current Close": "₹{:.2f}"})
-        )
+        # Display clean standard dataframe table to bypass matplotlib errors entirely
+        st.dataframe(final_reporting_df, use_container_width=True)
         
         st.write("---")
         priority_ticker = final_reporting_df.iloc[0]['Ticker Symbol']
